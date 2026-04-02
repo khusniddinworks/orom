@@ -370,16 +370,19 @@ const PORT = process.env.PORT || 3000;
   attachRoutes(db);
 
   app.get("/admin/", (req, res) => {
-    res.sendFile(path.join(ROOT, "public", "admin", "index.html"));
+    res.sendFile(path.join(ROOT, "admin", "index.html"));
   });
   app.get("/admin", (req, res) => res.redirect(301, "/admin/"));
   app.use("/assets", express.static(path.join(ROOT, "assets")));
   app.use("/video", express.static(path.join(ROOT, "video")));
-  app.use(express.static(path.join(ROOT, "public")));
+  app.use("/css", express.static(path.join(ROOT, "css")));
+  app.use("/js", express.static(path.join(ROOT, "js")));
+  app.use("/ru", express.static(path.join(ROOT, "ru")));
+  app.use("/en", express.static(path.join(ROOT, "en")));
 
   app.get("*", (req, res) => {
     if (req.path.startsWith("/api")) return res.status(404).json({ error: "Not found" });
-    res.sendFile(path.join(ROOT, "public", "index.html"));
+    res.sendFile(path.join(ROOT, "index.html"));
   });
 
   app.listen(PORT, () => {
