@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Orom — analitika</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #f4f1f8;
+        --card: #fff;
+        --ink: #2a2438;
+        --soft: #6b6378;
+        --lav: #7d6aa8;
+        --border: rgba(125, 106, 168, 0.2);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 15px;
+        line-height: 1.5;
+        padding: 1rem min(4vw, 1.5rem) 3rem;
+      }
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.35rem;
+        font-weight: 700;
+      }
+      .sub {
+        margin: 0 0 1.25rem;
+        color: var(--soft);
+        font-size: 0.92rem;
+      }
+      .login {
+        max-width: 380px;
+        margin: 3rem auto;
+        background: var(--card);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        box-shadow: 0 12px 40px rgba(42, 36, 56, 0.08);
+      }
+      .login label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+        color: var(--soft);
+      }
+      .login input {
+        width: 100%;
+        padding: 0.65rem 0.8rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        font-size: 1rem;
+        margin-bottom: 1rem;
+      }
+      .login button {
+        width: 100%;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #7d6aa8, #5a4878);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .dash.hidden {
+        display: none;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1.25rem;
+      }
+      .toolbar select {
+        padding: 0.45rem 0.65rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        font-size: 0.9rem;
+      }
+      .toolbar a {
+        color: var(--lav);
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .grid {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        margin-bottom: 1.25rem;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 1rem 1rem 0.9rem;
+        border: 1px solid var(--border);
+      }
+      .card strong {
+        display: block;
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+      .card span {
+        font-size: 0.78rem;
+        color: var(--soft);
+      }
+      .charts {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      @media (min-width: 900px) {
+        .charts {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .chart-box {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 1rem;
+        border: 1px solid var(--border);
+      }
+      .chart-box h2 {
+        margin: 0 0 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+      .chart-box canvas {
+        max-height: 260px;
+      }
+      .lists {
+        display: grid;
+        gap: 1rem;
+      }
+      @media (min-width: 800px) {
+        .lists {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .list-box {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 1rem;
+        border: 1px solid var(--border);
+      }
+      .list-box h2 {
+        margin: 0 0 0.65rem;
+        font-size: 0.95rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.35rem 0.25rem;
+        border-bottom: 1px solid #eee;
+      }
+      th {
+        color: var(--soft);
+        font-weight: 600;
+      }
+      .err {
+        background: #fde8e8;
+        color: #9b1c1c;
+        padding: 0.65rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        font-size: 0.88rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="login" class="login">
+      <h1>Admin panel</h1>
+      <p class="sub">Kalit so‘z serverdagi ADMIN_SECRET bilan bir xil bo‘lishi kerak.</p>
+      <div id="login-err" class="err" style="display: none"></div>
+      <label for="key">Admin kalit</label>
+      <input id="key" type="password" autocomplete="current-password" placeholder="ADMIN_SECRET" />
+      <button type="button" id="login-btn">Kirish</button>
+    </div>
+
+    <div id="dash" class="dash hidden">
+      <h1>Orom Yo‘stiq — analitika</h1>
+      <p class="sub">Nima ishlayapti, nima yo‘q — tez ko‘rish uchun.</p>
+      <div id="dash-err" class="err" style="display: none"></div>
+
+      <div class="toolbar">
+        <label>
+          Davr:
+          <select id="days">
+            <option value="7">7 kun</option>
+            <option value="30" selected>30 kun</option>
+            <option value="90">90 kun</option>
+          </select>
+        </label>
+        <button type="button" id="refresh" style="padding: 0.45rem 0.85rem; border-radius: 10px; border: 1px solid var(--border); background: var(--card); cursor: pointer">
+          Yangilash
+        </button>
+        <a id="export-csv" href="#" target="_blank">Lidlar CSV</a>
+        <a href="/">Sahifaga qaytish</a>
+      </div>
+
+      <div class="grid" id="kpis"></div>
+
+      <div class="charts">
+        <div class="chart-box">
+          <h2>Trafik (kunlar)</h2>
+          <canvas id="ch-traffic"></canvas>
+        </div>
+        <div class="chart-box">
+          <h2>Chuqurlik: qayerda to‘xtash</h2>
+          <canvas id="ch-drop"></canvas>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="chart-box">
+          <h2>Eng ko‘p bosilgan CTA</h2>
+          <canvas id="ch-cta"></canvas>
+        </div>
+        <div class="chart-box">
+          <h2>Manbalar (utm_source)</h2>
+          <canvas id="ch-src"></canvas>
+        </div>
+      </div>
+
+      <div class="lists">
+        <div class="list-box">
+          <h2>Eng ko‘p bosilgan joylar</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Nomi</th>
+                <th>Soni</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-clicks"></tbody>
+          </table>
+        </div>
+        <div class="list-box">
+          <h2>So‘nggi lidlar</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Vaqt</th>
+                <th>Telefon</th>
+                <th>TG</th>
+                <th>Manba</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-leads"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script src="./admin.js"></script>
+  </body>
+</html>
